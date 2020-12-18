@@ -102,19 +102,19 @@ class QR2LINES:
         self.rd_file = self.openImageFile(filepath)
         print(self.rd_file.read(self.image_offset))
 
-        plus_one = 1 if (self.image_width - 8 * int(self.image_width/8)) % 8 else 0
+        plus_one = 1 if self.image_width/8 != int(self.image_width/8) else 0
         loop_x = int(self.image_width/8) + plus_one
-        #dummy_pixel_width = 4 - self.image_width%4 # BMP pixel width must be 4x
+        plus_one = 1 if int(loop_x/4) != loop_x/4 else 0
+        loop_x4 = 4*(int(loop_x/4)+plus_one) # BMP width must be x4 byte
+        dummy_x = loop_x4 - loop_x
 
         for axis_y in range(self.image_height):
-            for axis_x in range(loop_x):
+            for axis_x in range(loop_x4):
                 borw = int.from_bytes(self.rd_file.read(1), 'little')
 
-                ここでbit単位に分解だ
+                #ここでbit単位に分解だ!!!
 
                 self.image_array[axis_y].append(borw)
-                #for _ in range(dummy_pixel_width):
-                #    self.rd_file.read(1)
         for arr in self.image_array:
             print(arr)
 
