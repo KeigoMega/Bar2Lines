@@ -1,4 +1,4 @@
-# v1221-1348
+# v1221-1545
 
 import sys
 import threading
@@ -50,6 +50,8 @@ class QR2LINES:
         self.end_point_x = 0
         self.start_point_y = 0
         self.end_point_y = 0
+        self.min_offset_x = 0
+        self.min_offset_y = 0
 
     def openImageFile(self, filepath=''):
         if filepath == '':
@@ -148,7 +150,7 @@ class QR2LINES:
                             ending = 1
                     else:
                         ending = 1
-                self.start_point_x = draw_x * 0.5
+                self.start_point_x = draw_x
 
             elif start_or_end == 'end':
                 # search true end_point_x
@@ -161,7 +163,7 @@ class QR2LINES:
                             ending = 1
                     else:
                         ending = 1
-                self.end_point_x = draw_x * 0.5
+                self.end_point_x = draw_x
         elif xory == 'y':
             if start_or_end == 'start':
                 # search true start_point_y
@@ -174,7 +176,7 @@ class QR2LINES:
                             ending = 1
                     else:
                         ending = 1
-                self.start_point_y = draw_y * 0.5
+                self.start_point_y = draw_y
             elif start_or_end == 'end':
                 # search true end_point_y
                 while not ending:
@@ -186,11 +188,12 @@ class QR2LINES:
                             ending = 1
                     else:
                         ending = 1
-                self.end_point_y = draw_y * 0.5
+                self.end_point_y = draw_y
 
     def arrayToDrawing(self):
         offset_x = 0
         offset_y = 0
+        scaling = 1
         argv = sys.argv
         if len(argv) == 2:
             offset_x = float(argv[1][: argv[1].find(' ')])
@@ -198,8 +201,15 @@ class QR2LINES:
         elif len(argv) == 3:
             offset_x = float(argv[1])
             offset_y = float(argv[2])
+        if len(argv) == 4:
+            scaling = float(argv[3])
 
+        drawing_x_list = []
+        drawing_y_list = []
         drawing_line_set = set()
+
+        self.min_offset_x = self.image_width
+        self.min_offset_y = self.image_height
         for axis_y in range(self.image_height):
             for axis_x in range(self.image_width):
                 if self.image_array[axis_y][axis_x]:
@@ -220,10 +230,19 @@ class QR2LINES:
                         thz.join()
                     # make horizonal drawing
                     if self.start_point_x - self.end_point_x:
-                        drawing_line_set.add(str(f'{offset_x+self.start_point_x} {offset_y+axis_y*0.5}_{offset_x+self.end_point_x} {offset_y+axis_y*0.5}'))
+                        drawing_x_list.append([offset_x+self.start_point_x*scaling, offset_y+axis_y*scaling, offset_x+self.end_point_x*scaling, offset_y+axis_y*scaling])
+                        if self.start_point_x*scaling < self.min_offset_x:
+                            self.min_offset_x = self.start_point_x*scaling
                     # make vertical drawing
                     if self.start_point_y - self.end_point_y:
-                        drawing_line_set.add(str(f'{offset_x+axis_x*0.5} {offset_y+self.start_point_y}_{offset_x+axis_x*0.5} {offset_y+self.end_point_y}'))
+                        drawing_x_list.append(offset_x+axis_x*scaling, offset_y+self.start_point_y*scaling, offset_x+axis_x*scaling, offset_y+self.end_point_y*scaling)
+                        if self.start_point_y*scaling < self.min_offset_y:
+                            self.min_offset_y = self.start_point_y*scaling
+        # trimming white zone
+        for x_list in drawing_x_list:
+            drawing_line_set.add(str(f'{x_list[0]-self.min_offset_x} {x_list[1]-self.min_offset_y}_{x_list[2]-self.min_offset_x} {x_list[3]-self.min_offset_x}'))
+        for y_list in drawing_y_list:
+            drawing_line_set.add(str(f'{y_list[0]-self.min_offset_x} {y_list[1]-self.min_offset_y}_{y_list[2]-self.min_offset_x} {y_list[3]-self.min_offset_x}'))
 
         # debug print
         #print(drawing_line_set)
