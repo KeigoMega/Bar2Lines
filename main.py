@@ -1,4 +1,4 @@
-# v1221-1304
+# v1221-1310
 
 import sys
 import threading
@@ -189,6 +189,13 @@ class QR2LINES:
                 self.end_point_y = draw_y * 0.5
 
     def arrayToDrawing(self):
+        offset_x = 0
+        offset_y = 0
+        argv = sys.argv
+        if len(argv) > 2:
+            offset_x = float(argv[1])
+            offset_y = float(argv[2])
+
         drawing_line_set = set()
         for axis_y in range(self.image_height):
             for axis_x in range(self.image_width):
@@ -210,10 +217,10 @@ class QR2LINES:
                         thz.join()
                     # make horizonal drawing
                     if self.start_point_x - self.end_point_x:
-                        drawing_line_set.add(str(f'{self.start_point_x} {axis_y*0.5}_{self.end_point_x} {axis_y*0.5}'))
+                        drawing_line_set.add(str(f'{offset_x+self.start_point_x} {offset_y+axis_y*0.5}_{offset_x+self.end_point_x} {offset_y+axis_y*0.5}'))
                     # make vertical drawing
                     if self.start_point_y - self.end_point_y:
-                        drawing_line_set.add(str(f'{axis_x*0.5} {self.start_point_y}_{axis_x*0.5} {self.end_point_y}'))
+                        drawing_line_set.add(str(f'{offset_x+axis_x*0.5} {offset_y+self.start_point_y}_{offset_x+axis_x*0.5} {offset_y+self.end_point_y}'))
 
         # debug print
         #print(drawing_line_set)
