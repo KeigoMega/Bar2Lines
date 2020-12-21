@@ -1,4 +1,4 @@
-# v1221-1608
+# v1222-0842
 
 import sys
 import threading
@@ -229,16 +229,23 @@ class QR2LINES:
                         thz.join()
                     # make horizonal drawing
                     if self.start_point_x - self.end_point_x:
-                        drawing_x_list.append([offset_x+self.start_point_x*scaling, offset_y+axis_y*scaling, offset_x+self.end_point_x*scaling, offset_y+axis_y*scaling])
-                        if self.start_point_x*scaling < self.min_offset_x:
-                            self.min_offset_x = self.start_point_x*scaling
+                        scaled_line_set.add([offset_x+self.start_point_x*scaling, offset_y+axis_y*scaling, offset_x+self.end_point_x*scaling, offset_y+axis_y*scaling])
                     # make vertical drawing
                     if self.start_point_y - self.end_point_y:
-                        drawing_x_list.append([offset_x+axis_x*scaling, offset_y+self.start_point_y*scaling, offset_x+axis_x*scaling, offset_y+self.end_point_y*scaling])
+                        scaled_line_set.add([offset_x+axis_x*scaling, offset_y+self.start_point_y*scaling, offset_x+axis_x*scaling, offset_y+self.end_point_y*scaling])
                         if self.start_point_y*scaling < self.min_offset_y:
                             self.min_offset_y = self.start_point_y*scaling
+        self.min_offset_x = min(scaled_line_set, key=lambda x: x[0])
+        self.min_offset_y = min(scaled_line_set, key=lambda x: x[1])
         # trimming white zone
-        for x_list in drawing_x_list:
+        for elem in scaled_line_set:
+            trimmed_line_set.add(str(f'{elem[0]-self.min_offset_x} {elem[1]-self.min_offset_y}_{elem[2]-self.min_offset_x} {elem[3]-self.min_offset_x}'))
+
+        # debug print
+        print(trimmed_line_set)
+
+        return trimmed_line_set
+
             drawing_line_set.add(str(f'{x_list[0]-self.min_offset_x} {x_list[1]-self.min_offset_y}_{x_list[2]-self.min_offset_x} {x_list[3]-self.min_offset_x}'))
         for y_list in drawing_y_list:
             drawing_line_set.add(str(f'{y_list[0]-self.min_offset_x} {y_list[1]-self.min_offset_y}_{y_list[2]-self.min_offset_x} {y_list[3]-self.min_offset_x}'))
