@@ -1,4 +1,4 @@
-# v1221-1310
+# v1221-1348
 
 import sys
 import threading
@@ -192,7 +192,10 @@ class QR2LINES:
         offset_x = 0
         offset_y = 0
         argv = sys.argv
-        if len(argv) > 2:
+        if len(argv) == 2:
+            offset_x = float(argv[1][: argv[1].find(' ')])
+            offset_y = float(argv[1][argv[1].find(' ')+1: ])
+        elif len(argv) == 3:
             offset_x = float(argv[1])
             offset_y = float(argv[2])
 
