@@ -195,17 +195,18 @@ class QR2LINES:
         offset_y = 0
         scaling = 1
         argv = sys.argv
+        print(argv)
         if len(argv) == 2:
             offset_x = float(argv[1][: argv[1].find(' ')])
             offset_y = float(argv[1][argv[1].find(' ')+1: ])
-        elif len(argv) == 3:
-            offset_x = float(argv[1][: argv[1].find(' ')])
-            offset_y = float(argv[1][argv[1].find(' ')+1: ])
-            scaling = float(argv[2])
+        elif len(argv) >= 3:
+            offset_x = float(argv[1])
+            offset_y = float(argv[2])
+        if len(argv) == 4:
+            scaling = float(argv[3])
 
-        drawing_x_list = []
-        drawing_y_list = []
-        drawing_line_set = set()
+        scaled_line_set = set()
+        trimmed_line_set = set()
 
         self.min_offset_x = self.image_width
         self.min_offset_y = self.image_height
@@ -235,8 +236,8 @@ class QR2LINES:
                         scaled_line_set.add([offset_x+axis_x*scaling, offset_y+self.start_point_y*scaling, offset_x+axis_x*scaling, offset_y+self.end_point_y*scaling])
                         if self.start_point_y*scaling < self.min_offset_y:
                             self.min_offset_y = self.start_point_y*scaling
-        self.min_offset_x = min(scaled_line_set, key=lambda x: x[0])
-        self.min_offset_y = min(scaled_line_set, key=lambda x: x[1])
+        self.min_offset_x = min(scaled_line_set, key=lambda x: x[0])[0]
+        self.min_offset_y = min(scaled_line_set, key=lambda x: x[1])[1]
         # trimming white zone
         for elem in scaled_line_set:
             trimmed_line_set.add(str(f'{elem[0]-self.min_offset_x} {elem[1]-self.min_offset_y}_{elem[2]-self.min_offset_x} {elem[3]-self.min_offset_x}'))
