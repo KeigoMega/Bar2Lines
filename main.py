@@ -1,4 +1,4 @@
-# v1221-1545
+# v1221-1608
 
 import sys
 import threading
@@ -199,10 +199,9 @@ class QR2LINES:
             offset_x = float(argv[1][: argv[1].find(' ')])
             offset_y = float(argv[1][argv[1].find(' ')+1: ])
         elif len(argv) == 3:
-            offset_x = float(argv[1])
-            offset_y = float(argv[2])
-        if len(argv) == 4:
-            scaling = float(argv[3])
+            offset_x = float(argv[1][: argv[1].find(' ')])
+            offset_y = float(argv[1][argv[1].find(' ')+1: ])
+            scaling = float(argv[2])
 
         drawing_x_list = []
         drawing_y_list = []
@@ -235,7 +234,7 @@ class QR2LINES:
                             self.min_offset_x = self.start_point_x*scaling
                     # make vertical drawing
                     if self.start_point_y - self.end_point_y:
-                        drawing_x_list.append(offset_x+axis_x*scaling, offset_y+self.start_point_y*scaling, offset_x+axis_x*scaling, offset_y+self.end_point_y*scaling)
+                        drawing_x_list.append([offset_x+axis_x*scaling, offset_y+self.start_point_y*scaling, offset_x+axis_x*scaling, offset_y+self.end_point_y*scaling])
                         if self.start_point_y*scaling < self.min_offset_y:
                             self.min_offset_y = self.start_point_y*scaling
         # trimming white zone
