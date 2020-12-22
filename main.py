@@ -1,4 +1,4 @@
-# v1222-1005
+# v1222-1013
 
 import sys
 import threading
@@ -206,7 +206,6 @@ class QR2LINES:
         elif len(argv) >= 3:
             offset_x = float(argv[1])
             offset_y = float(argv[2])
-        if len(argv) == 4:
             scaling = float(argv[3])
 
         scaled_line_list = []
