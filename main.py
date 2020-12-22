@@ -1,4 +1,4 @@
-# v1222-0842
+# v1222-1005
 
 import sys
 import threading
@@ -52,6 +52,9 @@ class QR2LINES:
         self.end_point_y = 0
         self.min_offset_x = 0
         self.min_offset_y = 0
+
+        # Circle Drawing
+        self.circle_points = []
 
     def openImageFile(self, filepath=''):
         if filepath == '':
@@ -126,6 +129,7 @@ class QR2LINES:
                 borw_binlist = borw_binlist
                 self.image_array[axis_y].extend(borw_binlist)
             self.image_array[axis_y] = self.image_array[axis_y][: self.image_width]
+        print(f'Length of self.image_array = {len(self.image_array)}')
         # debug print
         for arr in self.image_array:
             #print(arr)
@@ -205,7 +209,7 @@ class QR2LINES:
         if len(argv) == 4:
             scaling = float(argv[3])
 
-        scaled_line_set = set()
+        scaled_line_list = []
         trimmed_line_set = set()
 
         self.min_offset_x = self.image_width
@@ -230,45 +234,115 @@ class QR2LINES:
                         thz.join()
                     # make horizonal drawing
                     if self.start_point_x - self.end_point_x:
-                        scaled_line_set.add([offset_x+self.start_point_x*scaling, offset_y+axis_y*scaling, offset_x+self.end_point_x*scaling, offset_y+axis_y*scaling])
+                        scaled_line_list.append([offset_x+self.start_point_x*scaling, offset_y+axis_y*scaling, offset_x+self.end_point_x*scaling, offset_y+axis_y*scaling])
                     # make vertical drawing
                     if self.start_point_y - self.end_point_y:
-                        scaled_line_set.add([offset_x+axis_x*scaling, offset_y+self.start_point_y*scaling, offset_x+axis_x*scaling, offset_y+self.end_point_y*scaling])
+                        scaled_line_list.append([offset_x+axis_x*scaling, offset_y+self.start_point_y*scaling, offset_x+axis_x*scaling, offset_y+self.end_point_y*scaling])
                         if self.start_point_y*scaling < self.min_offset_y:
                             self.min_offset_y = self.start_point_y*scaling
-        self.min_offset_x = min(scaled_line_set, key=lambda x: x[0])[0]
-        self.min_offset_y = min(scaled_line_set, key=lambda x: x[1])[1]
+        print(f'Length of scaled_line_list = {len(scaled_line_list)}')
+        self.min_offset_x = min(scaled_line_list, key=lambda x: x[0])[0]-offset_x
+        self.min_offset_y = min(scaled_line_list, key=lambda x: x[1])[1]-offset_y
         # trimming white zone
-        for elem in scaled_line_set:
-            trimmed_line_set.add(str(f'{elem[0]-self.min_offset_x} {elem[1]-self.min_offset_y}_{elem[2]-self.min_offset_x} {elem[3]-self.min_offset_x}'))
+        for elem in scaled_line_list:
+            trimmed_line_set.add(str(f'{round(elem[0]-self.min_offset_x, 3)} {round(elem[1]-self.min_offset_y, 3)}_{round(elem[2]-self.min_offset_x, 3)} {round(elem[3]-self.min_offset_x, 3)}'))
+        print(f'Length of trimmed_line_set = {len(trimmed_line_set)*2}')
 
         # debug print
-        print(trimmed_line_set)
+        #print(trimmed_line_set)
 
         return trimmed_line_set
 
-            drawing_line_set.add(str(f'{x_list[0]-self.min_offset_x} {x_list[1]-self.min_offset_y}_{x_list[2]-self.min_offset_x} {x_list[3]-self.min_offset_x}'))
-        for y_list in drawing_y_list:
-            drawing_line_set.add(str(f'{y_list[0]-self.min_offset_x} {y_list[1]-self.min_offset_y}_{y_list[2]-self.min_offset_x} {y_list[3]-self.min_offset_x}'))
+    def searchCircleDrawPoint(self, axis_x_start, axis_y_start, axis_x_end, axis_y_end):
+        # search true start_point_x
+        for temp_y in range(int(axis_y_end - axis_y_start)):
+            for temp_x in range(int(axis_x_end - axis_x_start)):
+                if self.image_array[temp_y][temp_x]:
+                    self.circle_points.append([temp_x, temp_y])
+
+    def arrayToCircleDrawing(self):
+        offset_x = 0
+        offset_y = 0
+        scaling = 1
+        argv = sys.argv
+        print(argv)
+        if len(argv) == 2:
+            offset_x = float(argv[1][: argv[1].find(' ')])
+            offset_y = float(argv[1][argv[1].find(' ')+1: ])
+        elif len(argv) >= 3:
+            offset_x = float(argv[1])
+            offset_y = float(argv[2])
+            scaling = float(argv[3])
+
+        scaled_circle_list = []
+        trimmed_circle_set = set()
+
+        self.min_offset_x = self.image_width
+        self.min_offset_y = self.image_height
+
+        # search drawinf points
+        args0 = (0, 0, self.image_width, self.image_height)
+        #args1 = (0, 0, int(self.image_width/2)+10, int(self.image_height/2)+10)
+        #args2 = (int(self.image_width/2)-10, 0, self.image_width, int(self.image_height/2)+10)
+        #args3 = (0, int(self.image_height/2)-10, int(self.image_width/2)+10, self.image_height)
+        #args4 = (int(self.image_width/2)-10, int(self.image_height/2)-10, self.image_width, self.image_height)
+        #args_set = [args1, args2, args3, args4]
+        args_set = [args0]
+        th_list = []
+        # never use multiprocessing!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        for args_exe in args_set:
+            th = threading.Thread(target=self.searchCircleDrawPoint, args=args_exe)
+            th.start()
+            th_list.append(th)
+        # wait for threads finish
+        for thz in th_list:
+            thz.join()
+        # scaling circle drawing
+        print(f'Length of self.circle_points = {len(self.circle_points)}')
+        for elem in self.circle_points:
+            scaled_circle_list.append([offset_x+elem[0]*scaling, offset_y+elem[1]*scaling])
+        print(f'Length of scaled_circle_list = {len(scaled_circle_list)}')
+        self.min_offset_x = min(scaled_circle_list, key=lambda x: x[0])[0]-offset_x
+        self.min_offset_y = min(scaled_circle_list, key=lambda x: x[1])[1]-offset_y
+        # trimming white zone
+        for elem in scaled_circle_list:
+            trimmed_circle_set.add(str(f'{round(elem[0]-self.min_offset_x, 3)} {round(elem[1]-self.min_offset_y, 3)}'))
+        print(f'Length of trimmed_circle_set = {len(trimmed_circle_set)}')
 
         # debug print
-        #print(drawing_line_set)
+        #print(trimmed_circle_set)
 
-        return drawing_line_set
+        return trimmed_circle_set
 
-    def writeOutTextFile(self, filename='', all_text=''):
+    def writeOutTextFile(self, filename='', all_text='', line_or_circle=''):
         with open(filename, mode='w', encoding='Shift-JIS') as op_file:
             for lines in all_text:
-                op_file.write(lines[: lines.find('_')]+'\n')
-                op_file.write(lines[lines.find('_')+1: ]+'\n')
+                if line_or_circle == 'circle':
+                    op_file.write(lines+'\n')
+                elif line_or_circle == 'line':
+                    op_file.write(lines[: lines.find('_')]+'\n')
+                    op_file.write(lines[lines.find('_')+1: ]+'\n')
+                else:
+                    op_file.write(lines[: lines.find('_')]+'\n')
+                    op_file.write(lines[lines.find('_')+1: ]+'\n')
+
 
     def sequenceImageToLines(self, filepath):
         self.getImageHeaders(filepath)
         self.getImageFormat()
         self.checkImageFormat()
         self.imageToArray(filepath)
-        result = self.arrayToDrawing()
-        self.writeOutTextFile('C:\\TEMP\\QR.txt', result)
+        if len(sys.argv) >= 3:
+            line_or_circle = sys.argv[4]
+        if line_or_circle == 'circle':
+            result = self.arrayToCircleDrawing()
+            self.writeOutTextFile('C:\\TEMP\\QR.txt', result, 'circle')
+        elif line_or_circle == 'line':
+            result = self.arrayToDrawing()
+            self.writeOutTextFile('C:\\TEMP\\QR.txt', result, 'line')
+        else:
+            result = self.arrayToDrawing()
+            self.writeOutTextFile('C:\\TEMP\\QR.txt', result, 'line')
 
 def main():
     qr_cls = QR2LINES()
