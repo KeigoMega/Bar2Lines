@@ -1,4 +1,4 @@
 python setup.py
-move .\dist\main.exe .\dist\BMP2LINES.exe
-rm -R BMP2LINES_32
-move dist BMP2LINES_32
+move .\dist\main.exe .\dist\Bar2Lines.exe
+rm -R Bar2Lines_32
+move dist Bar2Lines_32
