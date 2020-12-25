@@ -1,4 +1,4 @@
-# v1225-0939
+# v1225-1208
 
 import sys
 import threading
@@ -136,7 +136,7 @@ class QR2LINES:
             #print(arr)
             pass
 
-    def arrayToBarDrawing(self):
+    def arrayToBarDrawing(self, vertical_or_horizonal='vartical'):
         offset_x = 0
         offset_y = 0
         scaling = 1
@@ -151,28 +151,37 @@ class QR2LINES:
             scaling = float(argv[3])
 
         scaled_line_list = []
-        trimmed_line_set = set()
+        trimmed_line_list = []
 
         self.min_offset_x = self.image_width
         self.min_offset_y = self.image_height
+        breaking_y = -1
         for axis_y in range(self.image_height):
+            if not breaking_y in {-1, axis_y}:
+                break
             for axis_x in range(self.image_width):
                 if self.image_array[axis_y][axis_x]:
-                    off_x = offset_x+axis_x*scaling
-                    off_y = offset_y+self.start_point_y*scaling
-                    scaled_line_list.append([off_x, off_y, off_x, off_y+80*scaling])
+                    breaking_y = axis_y
+                    if vertical_or_horizonal == 'vertical':
+                        off_x = offset_x
+                        off_y = offset_y+axis_x*scaling
+                        scaled_line_list.append([off_x, off_y, off_x+55*scaling, off_y])
+                    else:
+                        off_x = offset_x+axis_x*scaling
+                        off_y = offset_y+self.start_point_y*scaling
+                        scaled_line_list.append([off_x, off_y, off_x, off_y+55*scaling])
         print(f'Length of scaled_line_list = {len(scaled_line_list)}')
         self.min_offset_x = min(scaled_line_list, key=lambda x: x[0])[0]-offset_x
         self.min_offset_y = min(scaled_line_list, key=lambda x: x[1])[1]-offset_y
         # trimming white zone
         for elem in scaled_line_list:
-            trimmed_line_set.add(str(f'{round(elem[0]-self.min_offset_x, 3)} {round(elem[1]-self.min_offset_y, 3)}_{round(elem[2]-self.min_offset_x, 3)} {round(elem[3]-self.min_offset_x, 3)}'))
-        print(f'Length of trimmed_line_set = {len(trimmed_line_set)*2}')
+            trimmed_line_list.append(str(f'{round(elem[0]-self.min_offset_x, 3)} {round(elem[1]-self.min_offset_y, 3)}_{round(elem[2]-self.min_offset_x, 3)} {round(elem[3]-self.min_offset_y, 3)}'))
+        print(f'Length of trimmed_line_set = {len(trimmed_line_list)*2}')
 
         # debug print
         #print(trimmed_line_set)
 
-        return trimmed_line_set
+        return trimmed_line_list
 
     def searchCircleDrawPoint(self, axis_x_start, axis_y_start, axis_x_end, axis_y_end):
         # search true start_point_x
@@ -199,7 +208,7 @@ class QR2LINES:
         self.getImageFormat()
         self.checkImageFormat()
         self.imageToArray(filepath)
-        result = self.arrayToBarDrawing()
+        result = self.arrayToBarDrawing('vertical')
         self.writeOutTextFile('C:\\TEMP\\BAR.txt', result, 'line')
 
 def main():
