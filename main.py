@@ -1,4 +1,4 @@
-# v1225-0910
+# v1225-0939
 
 import sys
 import threading
@@ -160,7 +160,7 @@ class QR2LINES:
                 if self.image_array[axis_y][axis_x]:
                     off_x = offset_x+axis_x*scaling
                     off_y = offset_y+self.start_point_y*scaling
-                    scaled_line_list.append([off_x, off_y, off_x, off_y+5])
+                    scaled_line_list.append([off_x, off_y, off_x, off_y+80*scaling])
         print(f'Length of scaled_line_list = {len(scaled_line_list)}')
         self.min_offset_x = min(scaled_line_list, key=lambda x: x[0])[0]-offset_x
         self.min_offset_y = min(scaled_line_list, key=lambda x: x[1])[1]-offset_y
