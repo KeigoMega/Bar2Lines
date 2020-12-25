@@ -1,4 +1,4 @@
-# v1225-0816
+# v1225-0910
 
 import sys
 import threading
@@ -52,6 +52,7 @@ class QR2LINES:
         self.end_point_y = 0
         self.min_offset_x = 0
         self.min_offset_y = 0
+        self.known_x = set()
 
         # Circle Drawing
         self.circle_points = []
@@ -135,65 +136,6 @@ class QR2LINES:
             #print(arr)
             pass
 
-    def searchDrawPoint(self, axis_x, axis_y, xory, start_or_end):
-        temp_x = axis_x
-        draw_x = axis_x
-        temp_y = axis_y
-        draw_y = axis_y
-        ending = 0
-
-        if xory == 'x':
-            if start_or_end == 'start':
-                # search true start_point_x
-                while not ending:
-                    temp_x = draw_x - 1
-                    temp_x = 0 if temp_x < 0 else temp_x
-                    if self.image_array[axis_y][temp_x]:
-                        draw_x = temp_x
-                        if draw_x == 0:
-                            ending = 1
-                    else:
-                        ending = 1
-                self.start_point_x = draw_x
-
-            elif start_or_end == 'end':
-                # search true end_point_x
-                while not ending:
-                    temp_x = draw_x + 1
-                    temp_x = self.image_width-1 if temp_x > self.image_width-1 else temp_x
-                    if self.image_array[axis_y][temp_x]:
-                        draw_x = temp_x
-                        if draw_x == self.image_width-1:
-                            ending = 1
-                    else:
-                        ending = 1
-                self.end_point_x = draw_x
-        elif xory == 'y':
-            if start_or_end == 'start':
-                # search true start_point_y
-                while not ending:
-                    temp_y = draw_y - 1
-                    temp_y = 0 if temp_y < 0 else temp_y
-                    if self.image_array[temp_y][axis_x]:
-                        draw_y = temp_y
-                        if draw_y == 0:
-                            ending = 1
-                    else:
-                        ending = 1
-                self.start_point_y = draw_y
-            elif start_or_end == 'end':
-                # search true end_point_y
-                while not ending:
-                    temp_y = draw_y + 1
-                    temp_y = self.image_height-1 if temp_y > self.image_height-1 else temp_y
-                    if self.image_array[temp_y][axis_x]:
-                        draw_y = temp_y
-                        if draw_y == self.image_height:
-                            ending = 1
-                    else:
-                        ending = 1
-                self.end_point_y = draw_y
-
     def arrayToBarDrawing(self):
         offset_x = 0
         offset_y = 0
@@ -216,22 +158,9 @@ class QR2LINES:
         for axis_y in range(self.image_height):
             for axis_x in range(self.image_width):
                 if self.image_array[axis_y][axis_x]:
-                    # search drawinf points
-                    args3 = (axis_x, axis_y, 'y', 'start')
-                    args4 = (axis_x, axis_y, 'y', 'end')
-                    args_set = [args3, args4]
-                    th_list = []
-                    # never use multiprocessing!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    for args_exe in args_set:
-                        th = threading.Thread(target=self.searchDrawPoint, args=args_exe)
-                        th.start()
-                        th_list.append(th)
-                    # wait for threads finish
-                    for thz in th_list:
-                        thz.join()
-                    # make vertical drawing
-                    if self.start_point_y - self.end_point_y:
-                        scaled_line_list.append([offset_x+axis_x*scaling, offset_y+self.start_point_y*scaling, offset_x+axis_x*scaling, offset_y+self.end_point_y*scaling])
+                    off_x = offset_x+axis_x*scaling
+                    off_y = offset_y+self.start_point_y*scaling
+                    scaled_line_list.append([off_x, off_y, off_x, off_y+5])
         print(f'Length of scaled_line_list = {len(scaled_line_list)}')
         self.min_offset_x = min(scaled_line_list, key=lambda x: x[0])[0]-offset_x
         self.min_offset_y = min(scaled_line_list, key=lambda x: x[1])[1]-offset_y
